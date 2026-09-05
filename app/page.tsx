@@ -14,6 +14,7 @@ const allTopics = groups.flatMap((group) => group.topics)
 const defaultSettings: Settings = { autoNext: false, correctDelay: 1, wrongDelay: 2, mode: 'random', shuffleAnswers: true, skipClassN: true, theme: 'day' }
 const PASS_RATE = 0.8
 function shuffle<T>(items: T[]) { return [...items].sort(() => Math.random() - 0.5) }
+function isClassN(question: Question) { const source = [question.questionCode, question.text, ...question.answers.map((answer) => answer.text)].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(); return /TRIDY\s*N\s*\((?:JSON|TEXT)\)/.test(source) || /TRIDA\s*N\s*\((?:JSON|TEXT)\)/.test(source) || /\bN\s*\((?:JSON|TEXT)\)/.test(source) }
 
 export default function Page() {
   const [view, setView] = useState<'home' | 'practice' | 'settings' | 'custom' | 'results'>('home')
@@ -28,7 +29,7 @@ export default function Page() {
   const settingsLoaded = useRef(false)
   useEffect(() => { try { const saved = localStorage.getItem('radiocards-settings'); if (saved) setSettings({ ...defaultSettings, ...JSON.parse(saved) }) } catch {} finally { settingsLoaded.current = true } }, [])
   useEffect(() => { if (settingsLoaded.current) localStorage.setItem('radiocards-settings', JSON.stringify(settings)) }, [settings])
-  const filtered = useMemo(() => { const topicQuestions = topicIds.includes('all') ? questions : questions.filter((q) => topicIds.includes(q.topicId)); return settings.skipClassN ? topicQuestions.filter((q) => !q.questionCode.trim().toUpperCase().startsWith('N')) : topicQuestions }, [topicIds, settings.skipClassN])
+  const filtered = useMemo(() => { const topicQuestions = topicIds.includes('all') ? questions : questions.filter((q) => topicIds.includes(q.topicId)); return settings.skipClassN ? topicQuestions.filter((q) => !isClassN(q)) : topicQuestions }, [topicIds, settings.skipClassN])
   const order = settings.mode === 'random' ? randomOrder : filtered.map((_, i) => i)
   const question = filtered[order[index] ?? 0]
   const topicNames = topicIds.includes('all') ? 'Všechna témata' : topicIds.map((id) => allTopics.find((t) => t.topicId === id)?.name).filter(Boolean).join(', ')
