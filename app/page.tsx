@@ -14,7 +14,7 @@ const allTopics = groups.flatMap((group) => group.topics)
 const defaultSettings: Settings = { autoNext: false, correctDelay: 1, wrongDelay: 2, mode: 'random', shuffleAnswers: true, skipClassN: true, theme: 'day' }
 const PASS_RATE = 0.8
 function shuffle<T>(items: T[]) { return [...items].sort(() => Math.random() - 0.5) }
-function isClassN(question: Question) { const source = [question.questionCode, question.text, ...question.answers.map((answer) => answer.text)].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(); return /TRIDY\s*N\s*\((?:JSON|TEXT)\)/.test(source) || /TRIDA\s*N\s*\((?:JSON|TEXT)\)/.test(source) || /\bN\s*\((?:JSON|TEXT)\)/.test(source) }
+function isClassN(question: Question) { const source = [question.questionCode, question.text, ...question.answers.map((answer) => answer.text)].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase(); return /\bTRID(?:A|Y|E|U)\s+N\b/.test(source) || /\bN\s*\(\s*(?:JSON|TEXT)\s*\)/.test(source) }
 
 export default function Page() {
   const [view, setView] = useState<'home' | 'practice' | 'settings' | 'custom' | 'results'>('home')
