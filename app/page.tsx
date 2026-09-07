@@ -42,9 +42,9 @@ export default function Page() {
   const filtered = useMemo(() => { const base = testMode ? testQuestions : availableQuestions(topicIds, settings.skipClassN); return reviewMode ? base.filter((item) => wrongQuestionIds.includes(item.questionId)) : base }, [topicIds, settings.skipClassN, reviewMode, wrongQuestionIds, testMode, testQuestions])
   const countForTopic = (topicId: string) => availableQuestions([topicId], settings.skipClassN).length
   const countForGroup = (group: TopicGroup) => group.topics.reduce((total, topic) => total + countForTopic(topic.topicId), 0)
-  const order = settings.mode === 'random' ? randomOrder : filtered.map((_, i) => i)
+  const order = testMode ? filtered.map((_, i) => i) : settings.mode === 'random' ? randomOrder : filtered.map((_, i) => i)
   const question = filtered[order[index] ?? 0]
-  const topicNames = topicIds.includes('all') ? 'Všechna témata' : topicIds.map((id) => allTopics.find((t) => t.topicId === id)?.name).filter(Boolean).join(', ')
+  const topicNames = testMode ? (index < 20 ? 'Radiokomunikační předpisy' : index < 60 ? 'Radiokomunikační provoz' : 'Elektrotechnika a radiotechnika') : topicIds.includes('all') ? 'Všechna témata' : topicIds.map((id) => allTopics.find((t) => t.topicId === id)?.name).filter(Boolean).join(', ')
   const answered = selected !== null
   const isCorrect = question?.answers.find((a) => a.answerId === selected)?.isCorrect
   const answers = useMemo(() => settings.shuffleAnswers && question ? shuffle(question.answers) : question?.answers ?? [], [question, settings.shuffleAnswers, index])
