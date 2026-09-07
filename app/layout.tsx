@@ -4,7 +4,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'radiocards — procvičování radioamatérských otázek',
+  title: 'RadioCards — Procvičování radioamatérských otázek',
   description: 'Data načtená z JSON z HamOtazky.cz pro přípravu na zkoušky radioamatérské služby.',
   generator: 'v0.app',
   icons: {
