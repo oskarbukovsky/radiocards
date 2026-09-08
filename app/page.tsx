@@ -31,6 +31,7 @@ export default function Page() {
   const [settings, setSettings] = useState<Settings>(defaultSettings)
   const [randomOrder, setRandomOrder] = useState<number[]>([])
   const [wrongQuestionIds, setWrongQuestionIds] = useState<string[]>([])
+  const [reviewQuestionIds, setReviewQuestionIds] = useState<string[]>([])
   const [reviewMode, setReviewMode] = useState(false)
   const [testMode, setTestMode] = useState(false)
   const [testSeed, setTestSeed] = useState(0)
@@ -40,7 +41,7 @@ export default function Page() {
   useEffect(() => { try { const saved = localStorage.getItem('radiocards-settings'); if (saved) setSettings({ ...defaultSettings, ...JSON.parse(saved) }) } catch {} finally { settingsLoaded.current = true } }, [])
   useEffect(() => { if (settingsLoaded.current) localStorage.setItem('radiocards-settings', JSON.stringify(settings)) }, [settings])
   const testQuestions = useMemo(() => { const pickSection = (section: TestSection) => Object.entries(testTopicCounts[section]).flatMap(([topicId, count]) => shuffle(availableQuestions([topicId], settings.skipClassN, section === 'operation' ? settings.spellingAlphabet : undefined)).slice(0, count)); return [...pickSection('regulations'), ...pickSection('operation'), ...pickSection('technology')] }, [settings.skipClassN, settings.spellingAlphabet, testMode, testSeed])
-  const filtered = useMemo(() => { const base = testMode ? testQuestions : availableQuestions(topicIds, settings.skipClassN); return reviewMode ? base.filter((item) => wrongQuestionIds.includes(item.questionId)) : base }, [topicIds, settings.skipClassN, reviewMode, wrongQuestionIds, testMode, testQuestions])
+  const filtered = useMemo(() => { const base = testMode ? testQuestions : availableQuestions(topicIds, settings.skipClassN); return reviewMode ? base.filter((item) => reviewQuestionIds.includes(item.questionId)) : base }, [topicIds, settings.skipClassN, reviewMode, reviewQuestionIds, testMode, testQuestions])
   const countForTopic = (topicId: string) => availableQuestions([topicId], settings.skipClassN).length
   const countForGroup = (group: TopicGroup) => group.topics.reduce((total, topic) => total + countForTopic(topic.topicId), 0)
   const order = testMode ? filtered.map((_, i) => i) : settings.mode === 'random' ? randomOrder : filtered.map((_, i) => i)
@@ -54,10 +55,10 @@ export default function Page() {
   useEffect(() => { if (!answered || !settings.autoNext) return; const timer = window.setTimeout(next, (isCorrect ? settings.correctDelay : settings.wrongDelay) * 1000); return () => window.clearTimeout(timer) }, [answered, settings.autoNext, settings.correctDelay, settings.wrongDelay, isCorrect])
   function choose(answer: Answer) { if (answered) return; setSelected(answer.answerId); setAnsweredCount((v) => v + 1); if (answer.isCorrect) setScore((v) => v + 1); else if (question) setWrongQuestionIds((ids) => ids.includes(question.questionId) ? ids : [...ids, question.questionId]); if (testMode && question) { const section = (testSectionIds.regulations.includes(question.topicId) ? 'regulations' : testSectionIds.operation.includes(question.topicId) ? 'operation' : 'technology') as TestSection; setTestStats((stats) => ({ ...stats, [section]: { correct: stats[section].correct + (answer.isCorrect ? 1 : 0), total: stats[section].total + 1 } })) } }
   function next() { if (index + 1 >= filtered.length) { setView('results'); return } setIndex((v) => v + 1); setSelected(null) }
-  function reset() { setReviewMode(false); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setWrongQuestionIds([]); setView('practice'); if (testMode) { setTestStats({ regulations: { correct: 0, total: 0 }, operation: { correct: 0, total: 0 }, technology: { correct: 0, total: 0 } }); setTestSeed((seed) => seed + 1) } else if (settings.mode === 'random') setRandomOrder(shuffle(filtered.map((_, i) => i))) }
-  function start(ids: string[]) { setTestMode(false); setReviewMode(false); setTopicIds(ids); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setWrongQuestionIds([]); setView('practice') }
-  function startTest() { setTopicIds([]); setTestMode(true); setReviewMode(false); setTestStats({ regulations: { correct: 0, total: 0 }, operation: { correct: 0, total: 0 }, technology: { correct: 0, total: 0 } }); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setWrongQuestionIds([]); setView('practice') }
-  function reviewWrong() { setReviewMode(true); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setView('practice') }
+  function reset() { setReviewMode(false); setReviewQuestionIds([]); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setWrongQuestionIds([]); setView('practice'); if (testMode) { setTestStats({ regulations: { correct: 0, total: 0 }, operation: { correct: 0, total: 0 }, technology: { correct: 0, total: 0 } }); setTestSeed((seed) => seed + 1) } else if (settings.mode === 'random') setRandomOrder(shuffle(filtered.map((_, i) => i))) }
+  function start(ids: string[]) { setTestMode(false); setReviewMode(false); setReviewQuestionIds([]); setTopicIds(ids); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setWrongQuestionIds([]); setView('practice') }
+  function startTest() { setTopicIds([]); setTestMode(true); setReviewQuestionIds([]); setReviewMode(false); setTestStats({ regulations: { correct: 0, total: 0 }, operation: { correct: 0, total: 0 }, technology: { correct: 0, total: 0 } }); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setWrongQuestionIds([]); setView('practice') }
+  function reviewWrong() { setReviewQuestionIds(wrongQuestionIds); setWrongQuestionIds([]); setReviewMode(true); setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0); setView('practice') }
   function update(patch: Partial<Settings>) { setSettings((v) => ({ ...v, ...patch })); if (Object.keys(patch).some((key) => key !== 'theme')) { setIndex(0); setSelected(null); setScore(0); setAnsweredCount(0) } }
   function goHome() { setView('home'); setSelected(null) }
   return <main className={`app-shell ${settings.theme === 'night' ? 'night' : ''}`}>
