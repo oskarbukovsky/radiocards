@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: 'radiocards — procvičování radioamatérských otázek',
   description: 'Data načtená z JSON na HamOtazky.cz pro přípravu na zkoušky radioamatérské služby.',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       {
