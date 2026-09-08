@@ -5,8 +5,9 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'RadioCards — Procvičování radioamatérských otázek',
-  description: 'Data načtená z JSON z HamOtazky.cz pro přípravu na zkoušky radioamatérské služby.',
+  description: 'Cvičení pro přípravu na zkoušky radioamatérské služby HAREC (NOVICE).',
   generator: 'v0.app',
+  manifest: '/manifest.json',
   icons: {
     icon: [
       {
