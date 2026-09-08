@@ -10,6 +10,7 @@ type TopicGroup = { topicGroupId: string; name: string; topics: Topic[] }
 type Settings = { autoNext: boolean; correctDelay: number; wrongDelay: number; mode: 'random' | 'sequential'; shuffleAnswers: boolean; skipClassN: boolean; spellingAlphabet: 'czech' | 'international'; theme: 'day' | 'night' }
 type TestSection = 'regulations' | 'operation' | 'technology'
 const testSectionIds: Record<TestSection, string[]> = { regulations: ['1', '2', '3'], operation: ['4', '5', '6', '7', '8', '9', '10'], technology: ['11', '12', '13', '14', '15', '16', '17', '18', '19', '20'] }
+const testTopicCounts: Record<TestSection, Record<string, number>> = { regulations: { '1': 6, '2': 2, '3': 12 }, operation: { '4': 6, '5': 3, '6': 3, '7': 4, '8': 4, '9': 15, '10': 8 }, technology: { '11': 4, '12': 2, '13': 4, '14': 2, '15': 2, '16': 1, '17': 1, '18': 1, '19': 2, '20': 1 } }
 const questions = data.questions as Question[]
 const groups = data.groupedTopics as TopicGroup[]
 const allTopics = groups.flatMap((group) => group.topics)
@@ -38,7 +39,7 @@ export default function Page() {
   const settingsLoaded = useRef(false)
   useEffect(() => { try { const saved = localStorage.getItem('radiocards-settings'); if (saved) setSettings({ ...defaultSettings, ...JSON.parse(saved) }) } catch {} finally { settingsLoaded.current = true } }, [])
   useEffect(() => { if (settingsLoaded.current) localStorage.setItem('radiocards-settings', JSON.stringify(settings)) }, [settings])
-  const testQuestions = useMemo(() => { const pick = (section: TestSection, count: number) => shuffle(availableQuestions(testSectionIds[section], settings.skipClassN, section === 'operation' ? settings.spellingAlphabet : undefined)).slice(0, count); return [...pick('regulations', 20), ...pick('operation', 40), ...pick('technology', 20)] }, [settings.skipClassN, settings.spellingAlphabet, testMode, testSeed])
+  const testQuestions = useMemo(() => { const pickSection = (section: TestSection) => Object.entries(testTopicCounts[section]).flatMap(([topicId, count]) => shuffle(availableQuestions([topicId], settings.skipClassN, section === 'operation' ? settings.spellingAlphabet : undefined)).slice(0, count)); return [...pickSection('regulations'), ...pickSection('operation'), ...pickSection('technology')] }, [settings.skipClassN, settings.spellingAlphabet, testMode, testSeed])
   const filtered = useMemo(() => { const base = testMode ? testQuestions : availableQuestions(topicIds, settings.skipClassN); return reviewMode ? base.filter((item) => wrongQuestionIds.includes(item.questionId)) : base }, [topicIds, settings.skipClassN, reviewMode, wrongQuestionIds, testMode, testQuestions])
   const countForTopic = (topicId: string) => availableQuestions([topicId], settings.skipClassN).length
   const countForGroup = (group: TopicGroup) => group.topics.reduce((total, topic) => total + countForTopic(topic.topicId), 0)
